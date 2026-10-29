@@ -73,23 +73,22 @@ El flujo es `En preparación` → `Listo` → `En camino` → `Entregado`. Sin r
 | `src/Models.kt` | Clases `Producto` y `Pedido`; herencia de `Usuario` en `Cliente` y `Repartidor`; `override`, encapsulación, totales, asignación y entrega. |
 | `src/Inventory.kt` | Inventario con `Map`, cálculo de ingredientes para un lote, verificación con `when` y actualización del stock. |
 | `src/Console.kt` | Entrada con `try-catch`, validación de strings, operadores `?.` y `?:`, reportes con `for` y `filter` y plantillas de strings. |
-| `test/WeekTwoTests.kt` | Pruebas de reglas de negocio en Kotlin, sin dependencias de pruebas externas. |
-| `tests/verify_week2.py` | Pruebas funcionales de la consola, mediante biblioteca estándar de Python. |
+| `test/WeekTwoTests.java` | 19 pruebas de reglas de negocio en Java, sin dependencias de pruebas externas. |
 
 Se conservan las clases y métodos nombrados explícitamente en la actividad (`detallarProducto`, `calcularTotal`, `cambiarEstado`, `entregarPedido`). Las demás funciones usan nombres en inglés según las reglas del proyecto.
 
 ## Verificación
 
-Desde la raíz del proyecto, en macOS con IntelliJ en su ubicación estándar y `java` en el PATH:
+Desde la raíz del proyecto, en macOS con IntelliJ en su ubicación estándar y JDK 21 (`java` y `javac`) en el PATH:
 
 ```bash
 "/Applications/IntelliJ IDEA.app/Contents/plugins/Kotlin/kotlinc/bin/kotlinc" src/*.kt -include-runtime -d /tmp/pizzeria-week2.jar
-python3 tests/verify_week2.py /tmp/pizzeria-week2.jar
-"/Applications/IntelliJ IDEA.app/Contents/plugins/Kotlin/kotlinc/bin/kotlinc" src/*.kt test/WeekTwoTests.kt -include-runtime -d /tmp/pizzeria-week2-tests.jar
-java -cp /tmp/pizzeria-week2-tests.jar WeekTwoTestsKt
+mkdir -p /tmp/pizzeria-week2-tests
+javac --release 21 -encoding UTF-8 -cp /tmp/pizzeria-week2.jar -d /tmp/pizzeria-week2-tests test/WeekTwoTests.java
+java -cp /tmp/pizzeria-week2.jar:/tmp/pizzeria-week2-tests WeekTwoTests
 ```
 
-Las pruebas de dominio también pueden ejecutarse desde `test/WeekTwoTests.kt` en IntelliJ. Python 3 se necesita únicamente para las pruebas de consola. Los JAR se generan en `/tmp`, fuera del repositorio.
+Las pruebas están escritas únicamente en Java y también pueden ejecutarse con `main` desde `test/WeekTwoTests.java` en IntelliJ. Utilizan la interoperabilidad entre Java y Kotlin y no necesitan un framework externo. Los archivos compilados se generan en `/tmp`, fuera del repositorio.
 
 Se comprueban descuentos, impuestos y redondeo con valores esperados, recetas mixtas, consumos exactos, rechazo sin modificaciones parciales, reabastecimiento, negativos y desbordamientos, contactos inválidos, precios de venta, estados, disponibilidad de repartidores, herencia y polimorfismo. No se afirma envío real de notificaciones, persistencia ni geolocalización.
 
