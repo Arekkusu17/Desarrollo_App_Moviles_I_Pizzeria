@@ -9,8 +9,6 @@ Actividad individual de Desarrollo App Móviles I, Semana 2: «Aplicando utilida
 3. Abrir `src/Main.kt` y ejecutar `main`.
 4. Utilizar el menú en la consola; ingresar `0` en el menú principal para terminar.
 
-No requiere Gradle, Maven, base de datos, Android Studio ni conexión con servicios externos. Los datos se mantienen en memoria y se reinician al cerrar la aplicación.
-
 ## Uso
 
 | Opción | Comportamiento |
@@ -91,9 +89,3 @@ java -cp /tmp/pizzeria-week2.jar:/tmp/pizzeria-week2-tests WeekTwoTests
 Las pruebas están escritas únicamente en Java y también pueden ejecutarse con `main` desde `test/WeekTwoTests.java` en IntelliJ. Utilizan la interoperabilidad entre Java y Kotlin y no necesitan un framework externo. Los archivos compilados se generan en `/tmp`, fuera del repositorio.
 
 Se comprueban descuentos, impuestos y redondeo con valores esperados, recetas mixtas, consumos exactos, rechazo sin modificaciones parciales, reabastecimiento, negativos y desbordamientos, contactos inválidos, precios de venta, estados, disponibilidad de repartidores, herencia y polimorfismo. No se afirma envío real de notificaciones, persistencia ni geolocalización.
-
-## Versiones y entrega
-
-El trabajo de Semana 2 se desarrolla en `feature/week-2-kotlin-utilities`. Flujo de integración: `feature/*` → `develop` → `main`, sin coautoría en los commits.
-
-Semana 1 permanece disponible en la etiqueta `semana-1` y en su ZIP independiente. Sus pruebas originales pertenecen a esa versión y no al nuevo flujo del menú. El ZIP de Semana 2 incluye el proyecto, README y pruebas; excluye `.git`, compilados y archivos temporales. No debe confundirse la rama de trabajo con una versión ya integrada en `main`.
