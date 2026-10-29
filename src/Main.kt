@@ -30,13 +30,7 @@ fun main() {
                 }
                 2 -> advanceOrder(dailyOrders, deliveryPeople)
                 3 -> replenishInventory(inventory)
-                4 -> {
-                    showDailyReport(dailyOrders)
-                    for (order in dailyOrders) showSummary(order)
-                    // Ambas subclases implementan su propia descripción mediante override.
-                    val users: List<Usuario> = dailyOrders.map { it.cliente } + deliveryPeople
-                    for (user in users) println(user.describir())
-                }
+                4 -> showDailyReport(dailyOrders)
                 5 -> updateCatalogPrice(catalog)
             }
         }

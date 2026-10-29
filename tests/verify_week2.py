@@ -68,7 +68,8 @@ class WeekTwoConsoleTests(unittest.TestCase):
         self.assertIn("Estado: Entregado", output)
         self.assertIn("Completados: 1 | IDs: 1", output)
         self.assertIn("Pendientes: 1 | IDs: 2", output)
-        self.assertIn("Repartidor B | Contacto de prueba B | km 4 | Disponible", output)
+        self.assertNotIn("Contacto de prueba", output)
+        self.assertEqual(output.count("========== PEDIDO #"), 5)
 
     def test_all_drivers_busy_wait_then_reassign_after_delivery(self):
         lines = new_order() * 4 + ["2", "4", "2", "4", "2", "1", "2", "1", "2", "1", "2", "4", "0"]

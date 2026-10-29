@@ -18,9 +18,11 @@ No requiere Gradle, Maven, base de datos, Android Studio ni conexión con servic
 | 1. Nuevo pedido | Registrar cliente, elegir pizzas y cantidades, terminar la selección con 0 y agregar notas opcionales. Se valida el inventario completo antes de confirmar. |
 | 2. Avanzar estado | Elegir el ID de un pedido para pasar al siguiente estado. Al entregar, el repartidor vuelve a estar disponible. |
 | 3. Inventario y reabastecimiento | Consultar las existencias de cada ingrediente, seleccionar uno y agregar unidades. Usar 0 para volver sin modificar. |
-| 4. Reporte del día | Mostrar pedidos, resúmenes, grupos de completados y pendientes y descripciones de clientes y repartidores. |
+| 4. Reporte del día | Mostrar una línea por pedido y los grupos de completados y pendientes, sin repetir resúmenes ni datos de usuarios. |
 | 5. Actualizar precio | Elegir una pizza e ingresar un precio entero positivo. Los pedidos registrados conservan el precio de venta. |
 | 0. Salir | Mostrar el reporte y terminar la sesión. |
+
+El resumen completo se muestra al confirmar o avanzar el estado de un pedido. La opción 4 presenta únicamente el reporte compacto del día.
 
 El fin de la entrada cancela la operación que no se haya confirmado y muestra el reporte de los pedidos aceptados hasta ese momento.
 
