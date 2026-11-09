@@ -30,3 +30,6 @@ bin/
 
 ### Mac OS ###
 .DS_Store
+
+### Resumen generado por la aplicación ###
+/resumen_pizzeria.txt
