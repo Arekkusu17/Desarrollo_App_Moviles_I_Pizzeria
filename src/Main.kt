@@ -18,13 +18,13 @@ fun main() {
     )
     var dailyOrders: Array<Pedido> = emptyArray()
     val clients = mutableSetOf<Cliente>()
-    println("PIZZERÍA — SEMANA 2")
+    println("PIZZERÍA — SEMANA 3")
     println("Inventario en unidades de ingrediente por receta. Impuesto de simulación: 19 %.")
     try {
         while (true) {
             println("\n1. Nuevo pedido\n2. Avanzar estado de un pedido\n3. Ver inventario y reabastecer")
-            println("4. Reporte del día\n5. Actualizar precio de un producto\n0. Salir")
-            when (readInt("Opción", 0, 5)) {
+            println("4. Reporte del día\n5. Actualizar precio de un producto\n6. Demostración Semana 3\n0. Salir")
+            when (readInt("Opción", 0, 6)) {
                 0 -> break
                 1 -> {
                     val order = createOrder(dailyOrders.size + 1, catalog, inventory, deliveryPeople)
@@ -39,6 +39,7 @@ fun main() {
                 3 -> replenishInventory(inventory)
                 4 -> showDailyReport(dailyOrders)
                 5 -> updateCatalogPrice(catalog)
+                6 -> showWeekThreeDemo(catalog)
             }
         }
     } catch (error: InputEnded) {
