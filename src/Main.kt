@@ -54,13 +54,14 @@ private fun createOrder(
         println("0. Terminar selección")
         val choice = readInt("Pizza", 0, catalog.size)
         if (choice == 0) break
-        val remaining = 1000 - products.size
+        val product = catalog[choice - 1]
+        val remaining = ORDER_QUANTITY_RANGE.last - products.count { it === product }
         if (remaining == 0) {
-            println("Límite de 1000 pizzas por pedido alcanzado. Termina la selección con 0.")
+            println("Límite de ${ORDER_QUANTITY_RANGE.last} unidades de ${product.nombre} alcanzado.")
             continue
         }
-        val quantity = readInt("Cantidad de ${catalog[choice - 1].nombre}", 1, remaining)
-        repeat(quantity) { products.add(catalog[choice - 1]) }
+        val quantity = readInt("Cantidad de ${product.nombre}", ORDER_QUANTITY_RANGE.first, remaining)
+        repeat(quantity) { products.add(product) }
     }
     if (products.isEmpty()) {
         println("Pedido cancelado: no se seleccionaron pizzas.")
@@ -84,9 +85,7 @@ private fun createOrder(
             assignNearest(order, deliveryPeople)
             println("Pedido #$id confirmado. Ingredientes descontados según la receta.")
             showSummary(order)
-            client.correo.takeUnless { it == "correo@invalido.com" }?.let { email ->
-                println("[Notificación simulada] Para $email: pedido #$id en preparación.")
-            }
+            println("[Notificación simulada] Para ${client.correo}: pedido #$id en preparación.")
             order
         }
     }

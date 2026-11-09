@@ -5,6 +5,7 @@ import kotlin.math.abs
 private val DISCOUNT_RATE = BigDecimal("0.10")
 private val DEFAULT_TAX_RATE = BigDecimal("0.19")
 private const val DISCOUNT_THRESHOLD = 3
+val ORDER_QUANTITY_RANGE = 1..100
 
 fun money(value: BigDecimal): String = "\$${value.toPlainString()} CLP"
 
@@ -126,6 +127,10 @@ class Pedido(val id: Int, val cliente: Cliente, productos: List<Producto>, val n
     init {
         require(id > 0) { "El identificador debe ser positivo." }
         require(this.productos.isNotEmpty()) { "El pedido debe contener pizzas." }
+        require(this.productos.groupingBy { it.nombre.trim().lowercase() }.eachCount()
+            .values.all { it in ORDER_QUANTITY_RANGE }) {
+            "La cantidad por producto debe estar entre ${ORDER_QUANTITY_RANGE.first} y ${ORDER_QUANTITY_RANGE.last}."
+        }
     }
 
     fun calcularTotal(): OrderTotals = calculateTotals(productos)

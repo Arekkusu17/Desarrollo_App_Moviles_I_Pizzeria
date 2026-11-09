@@ -78,13 +78,14 @@ public class WeekTwoTests {
             product.actualizarPrecio(new BigDecimal("2000"));
             equalMoney(order.calcularTotal().getTotal(), "1190");
         });
-        test("Validación de teléfono y correo", () -> {
-            check(ConsoleKt.validatedPhone(" +56912345678 ").equals("+56912345678"), "Teléfono válido rechazado");
-            check(ConsoleKt.validatedPhone("abc").equals("(000) 000-0000"), "Falta valor predeterminado");
-            check(ConsoleKt.validatedPhone(null).equals("(000) 000-0000"), "Teléfono nulo no controlado");
+        test("Validación de teléfono y correo según Semana 3", () -> {
+            check("+56 (9) 1234-5678".equals(ConsoleKt.validatedPhone(" +56912345678 ")), "Teléfono chileno mal formateado");
+            check("+56 (222) 555-0147".equals(ConsoleKt.validatedPhone("222-555-0147")), "Teléfono mal formateado");
+            check(ConsoleKt.validatedPhone("abc 2225550147") == null, "Teléfono con letras aceptado");
+            check(ConsoleKt.validatedPhone(null) == null, "Teléfono nulo no controlado");
             check(ConsoleKt.validatedEmail(" prueba@example.com ").equals("prueba@example.com"), "Correo válido rechazado");
-            check(ConsoleKt.validatedEmail("sin@dominio").equals("correo@invalido.com"), "Correo inválido aceptado");
-            check(ConsoleKt.validatedEmail(null).equals("correo@invalido.com"), "Correo nulo no controlado");
+            check(ConsoleKt.validatedEmail("sin@dominio") == null, "Correo inválido aceptado");
+            check(ConsoleKt.validatedEmail(null) == null, "Correo nulo no controlado");
         });
         test("Repartidor más cercano disponible", () -> {
             Repartidor far = new Repartidor("Lejos", "Prueba", 1);
