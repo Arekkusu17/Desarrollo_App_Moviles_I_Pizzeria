@@ -2,9 +2,10 @@ import java.math.BigDecimal
 
 fun main() {
     val catalog = listOf(
-        Producto("Napolitana", BigDecimal("10000"), mapOf("Masa" to 1, "Salsa" to 1, "Queso" to 2)),
-        Producto("Pepperoni", BigDecimal("12000"), mapOf("Masa" to 1, "Salsa" to 1, "Queso" to 2, "Pepperoni" to 1))
-    )
+        PromotionalPizza("Napolitana", BigDecimal("10000"), mapOf("Masa" to 1, "Salsa" to 1, "Queso" to 2)),
+        Producto("Pepperoni", BigDecimal("12000"), mapOf("Masa" to 1, "Salsa" to 1, "Queso" to 2, "Pepperoni" to 1)),
+        PromotionalCombo("Combo familiar", BigDecimal("22000"), mapOf("Masa" to 2, "Salsa" to 2, "Queso" to 4, "Pepperoni" to 1))
+    ).distinct()
     val inventory = Inventory(mapOf("Masa" to 10, "Salsa" to 10, "Queso" to 20, "Pepperoni" to 5))
     val ingredientNames: Set<String> = catalog.flatMap { it.ingredientes.keys }.toSet()
     require(inventory.quantities().keys.containsAll(ingredientNames)) {
@@ -16,17 +17,23 @@ fun main() {
         Repartidor("Repartidor C", "Contacto de prueba C", 9)
     )
     var dailyOrders: Array<Pedido> = emptyArray()
-    println("PIZZERÍA — SEMANA 2")
+    val clients = mutableSetOf<Cliente>()
+    println("PIZZERÍA — SEMANA 3")
     println("Inventario en unidades de ingrediente por receta. Impuesto de simulación: 19 %.")
     try {
         while (true) {
             println("\n1. Nuevo pedido\n2. Avanzar estado de un pedido\n3. Ver inventario y reabastecer")
-            println("4. Reporte del día\n5. Actualizar precio de una pizza\n0. Salir")
+            println("4. Reporte del día\n5. Actualizar precio de un producto\n0. Salir")
             when (readInt("Opción", 0, 5)) {
                 0 -> break
                 1 -> {
                     val order = createOrder(dailyOrders.size + 1, catalog, inventory, deliveryPeople)
-                    order?.let { dailyOrders += it }
+                    if (order != null) {
+                        dailyOrders += order
+                        if (!clients.add(order.cliente)) {
+                            println("Cliente ya registrado. Se usan los datos ingresados para este pedido.")
+                        }
+                    }
                 }
                 2 -> advanceOrder(dailyOrders, deliveryPeople)
                 3 -> replenishInventory(inventory)
@@ -38,6 +45,7 @@ fun main() {
         println("\nEntrada finalizada. La operación incompleta no fue confirmada.")
     }
     showDailyReport(dailyOrders)
+    showSessionSummary(dailyOrders)
     println("Sesión finalizada. Los datos de esta simulación se mantienen solo en memoria.")
 }
 
@@ -52,18 +60,19 @@ private fun createOrder(
     while (true) {
         for ((index, product) in catalog.withIndex()) println("${index + 1}. ${product.detallarProducto()}")
         println("0. Terminar selección")
-        val choice = readInt("Pizza", 0, catalog.size)
+        val choice = readInt("Producto", 0, catalog.size)
         if (choice == 0) break
-        val remaining = 1000 - products.size
+        val product = catalog[choice - 1]
+        val remaining = ORDER_QUANTITY_RANGE.last - products.count { it == product }
         if (remaining == 0) {
-            println("Límite de 1000 pizzas por pedido alcanzado. Termina la selección con 0.")
+            println("Límite de ${ORDER_QUANTITY_RANGE.last} unidades de ${product.nombre} alcanzado.")
             continue
         }
-        val quantity = readInt("Cantidad de ${catalog[choice - 1].nombre}", 1, remaining)
-        repeat(quantity) { products.add(catalog[choice - 1]) }
+        val quantity = readInt("Cantidad de ${product.nombre}", ORDER_QUANTITY_RANGE.first, remaining)
+        repeat(quantity) { products.add(product) }
     }
     if (products.isEmpty()) {
-        println("Pedido cancelado: no se seleccionaron pizzas.")
+        println("Pedido cancelado: no se seleccionaron productos.")
         return null
     }
     print("Notas opcionales (Enter para omitir): ")
@@ -84,9 +93,7 @@ private fun createOrder(
             assignNearest(order, deliveryPeople)
             println("Pedido #$id confirmado. Ingredientes descontados según la receta.")
             showSummary(order)
-            client.correo.takeUnless { it == "correo@invalido.com" }?.let { email ->
-                println("[Notificación simulada] Para $email: pedido #$id en preparación.")
-            }
+            println("[Notificación simulada] Para ${client.correo}: pedido #$id en preparación.")
             order
         }
     }
@@ -151,7 +158,7 @@ private fun replenishInventory(inventory: Inventory) {
 private fun updateCatalogPrice(catalog: List<Producto>) {
     for ((index, product) in catalog.withIndex()) println("${index + 1}. ${product.detallarProducto()}")
     println("0. Volver")
-    val choice = readInt("Pizza a actualizar", 0, catalog.size)
+    val choice = readInt("Producto a actualizar", 0, catalog.size)
     if (choice == 0) return
     val newPrice = readPrice()
     catalog[choice - 1].actualizarPrecio(newPrice)

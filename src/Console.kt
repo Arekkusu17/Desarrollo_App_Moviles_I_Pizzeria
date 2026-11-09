@@ -1,5 +1,12 @@
 import java.math.BigDecimal
 
+private val EMAIL_PATTERN = Regex("[A-Za-z0-9_%+-]+(?:\\.[A-Za-z0-9_%+-]+)*@" +
+    "(?:[A-Za-z0-9](?:[A-Za-z0-9-]*[A-Za-z0-9])?\\.)+[A-Za-z]{2,}")
+private val PHONE_INPUT_PATTERN = Regex("\\+?[0-9 ()-]+")
+private val PHONE_SEPARATORS = Regex("[ ()-]")
+private val STANDARD_PHONE_PATTERN = Regex("([0-9]{2})([0-9]{3})([0-9]{3})([0-9]{4})")
+private val CHILEAN_PHONE_PATTERN = Regex("(56)([0-9])([0-9]{4})([0-9]{4})")
+
 class InputEnded : RuntimeException()
 
 fun readText(prompt: String): String {
@@ -37,23 +44,46 @@ fun readPrice(): BigDecimal {
     }
 }
 
-fun validatedPhone(input: String?): String = input?.trim()
-    ?.takeIf { it.matches(Regex("\\+?[0-9]{9,15}")) } ?: "(000) 000-0000"
+fun validatedPhone(input: String?): String? {
+    val text = input?.trim()?.takeIf(PHONE_INPUT_PATTERN::matches) ?: return null
+    val compact = text.replace(PHONE_SEPARATORS, "")
+    val digits = when {
+        compact.startsWith("+") -> compact.drop(1)
+        compact.length in 9..10 -> "56$compact"
+        else -> compact
+    }
+    val match = STANDARD_PHONE_PATTERN.matchEntire(digits)
+        ?: CHILEAN_PHONE_PATTERN.matchEntire(digits)
+        ?: return null
+    val (country, area, first, last) = match.destructured
+    return "+$country ($area) $first-$last"
+}
 
-fun validatedEmail(input: String?): String = input?.trim()
-    ?.takeIf { it.matches(Regex("[^\\s@]+@[^\\s@]+\\.[^\\s@]+")) } ?: "correo@invalido.com"
+fun validatedEmail(input: String?): String? = input?.trim()?.takeIf(EMAIL_PATTERN::matches)
 
 fun readClient(): Cliente {
     val name = readText("Nombre del cliente")
     val address = readText("Dirección de entrega")
-    print("Teléfono (9 a 15 dígitos; + opcional): ")
-    val phone = validatedPhone(readlnOrNull() ?: throw InputEnded())
-    print("Correo electrónico: ")
-    val email = validatedEmail(readlnOrNull() ?: throw InputEnded())
-    if (phone == "(000) 000-0000") println("Teléfono inválido o vacío. Se usará: $phone.")
-    if (email == "correo@invalido.com") println("Correo inválido o vacío. Se usará: $email.")
+    val phone = readPhone()
+    val email = readEmail()
     val locationKm = readInt("Ubicación en la ruta de reparto (km 0 a 100)", 0, 100)
     return Cliente(name, phone, email, address, locationKm)
+}
+
+private fun readPhone(): String {
+    while (true) {
+        val phone = validatedPhone(readText("Teléfono"))
+        if (phone != null) return phone
+        println("Teléfono inválido. Usa, por ejemplo, +56 (9) 1234-5678 o +56 (222) 555-0147.")
+    }
+}
+
+private fun readEmail(): String {
+    while (true) {
+        val email = validatedEmail(readText("Correo electrónico"))
+        if (email != null) return email
+        println("Correo inválido. Usa el formato nombre@dominio.com.")
+    }
 }
 
 fun showSummary(order: Pedido) {
@@ -61,10 +91,12 @@ fun showSummary(order: Pedido) {
     println("\n========== PEDIDO #${order.id} ==========")
     println(order.cliente.describir())
     for ((product, copies) in order.productos.groupBy { it.nombre to it.precio }) {
-        println("Pizza: ${product.first} | Precio unitario: ${money(product.second)} | Cantidad: ${copies.size}")
+        println("Producto: ${product.first} | Precio unitario: ${money(product.second)} | Cantidad: ${copies.size}")
     }
     println("Subtotal: ${money(totals.subtotal)}")
-    println("Descuento: ${money(totals.discount)}")
+    println("Descuento por producto: ${money(totals.productDiscount)}")
+    println("Descuento por cantidad: ${money(totals.discount - totals.productDiscount - totals.seasonalDiscount)}")
+    println("Descuento de temporada: ${money(totals.seasonalDiscount)}")
     println("Impuesto (19 % sobre subtotal con descuento): ${money(totals.tax)}")
     println("Total final: ${money(totals.total)}")
     println("Estado: ${order.estado.label}")
