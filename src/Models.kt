@@ -1,5 +1,6 @@
 import java.math.BigDecimal
 import java.math.RoundingMode
+import java.time.LocalDate
 import kotlin.math.abs
 
 private val DISCOUNT_RATE = BigDecimal("0.10")
@@ -61,13 +62,22 @@ class Repartidor(nombre: String, contacto: String, locationKm: Int) : Usuario(no
         if (available) "Disponible" else "Ocupado"
 }
 
-class Producto(val nombre: String, precio: BigDecimal, ingredientes: Map<String, Int>) {
+enum class ProductCategory {
+    PIZZA, BEVERAGE, INGREDIENT, COMBO
+}
+
+open class Producto @JvmOverloads constructor(
+    val nombre: String,
+    precio: BigDecimal,
+    ingredientes: Map<String, Int>,
+    val category: ProductCategory = ProductCategory.PIZZA
+) {
     var precio: BigDecimal = precio
         private set
     val ingredientes: Map<String, Int> = ingredientes.toMap()
 
     init {
-        require(nombre.isNotBlank()) { "El nombre de la pizza es obligatorio." }
+        require(nombre.isNotBlank()) { "El nombre del producto es obligatorio." }
         validatePrice(precio)
         require(this.ingredientes.isNotEmpty() && this.ingredientes.values.all { it > 0 }) {
             "La receta debe tener ingredientes con cantidades positivas."
@@ -83,7 +93,7 @@ class Producto(val nombre: String, precio: BigDecimal, ingredientes: Map<String,
         ingredientes.entries.joinToString { "${it.key}: ${it.value} unidad(es)" }
 
     // Conserva el precio de la venta aunque luego cambie el catálogo.
-    fun snapshot(): Producto = Producto(nombre, precio, ingredientes)
+    open fun snapshot(): Producto = Producto(nombre, precio, ingredientes, category)
 
     private fun validatePrice(value: BigDecimal) {
         require(value > BigDecimal.ZERO && value.stripTrailingZeros().scale() <= 0) {
@@ -96,28 +106,53 @@ enum class OrderStatus(val label: String) {
     PREPARING("En preparación"), READY("Listo"), ON_THE_WAY("En camino"), DELIVERED("Entregado")
 }
 
-data class OrderTotals(
+data class OrderTotals @JvmOverloads constructor(
     val subtotal: BigDecimal,
     val discount: BigDecimal,
     val tax: BigDecimal,
-    val total: BigDecimal
+    val total: BigDecimal,
+    val productDiscount: BigDecimal = BigDecimal.ZERO,
+    val seasonalDiscount: BigDecimal = BigDecimal.ZERO
 )
 
-fun calculateTotals(products: List<Producto>, taxRate: BigDecimal = DEFAULT_TAX_RATE): OrderTotals {
-    require(products.isNotEmpty()) { "El pedido debe contener al menos una pizza." }
+@JvmOverloads
+fun calculateTotals(
+    products: List<Producto>,
+    taxRate: BigDecimal = DEFAULT_TAX_RATE,
+    date: LocalDate? = null
+): OrderTotals {
+    require(products.isNotEmpty()) { "El pedido debe contener al menos un producto." }
     require(taxRate >= BigDecimal.ZERO && taxRate <= BigDecimal.ONE) { "Tasa de impuesto inválida." }
-    val subtotal = products.fold(BigDecimal.ZERO) { sum, product -> sum + product.precio }
-    val discount = if (products.size > DISCOUNT_THRESHOLD) {
-        (subtotal * DISCOUNT_RATE).setScale(0, RoundingMode.HALF_UP)
+    val subtotal = products.sumOf { it.precio }
+    val productDiscount = products.sumOf { product ->
+        val percentage = product.promotion()?.percentage ?: 0
+        product.precio * BigDecimal.valueOf(percentage.toLong(), 2)
+    }.setScale(0, RoundingMode.HALF_UP)
+    val afterProductDiscount = subtotal - productDiscount
+    val pizzaCount = products.count { it.category == ProductCategory.PIZZA }
+    val quantityDiscount = if (pizzaCount > DISCOUNT_THRESHOLD) {
+        (afterProductDiscount * DISCOUNT_RATE).setScale(0, RoundingMode.HALF_UP)
     } else {
         BigDecimal.ZERO
     }
+    val seasonalDiscount = if (date != null && date in SEASONAL_PROMOTION_DATES) {
+        ((afterProductDiscount - quantityDiscount) * SEASONAL_DISCOUNT_RATE).setScale(0, RoundingMode.HALF_UP)
+    } else {
+        BigDecimal.ZERO
+    }
+    val discount = productDiscount + quantityDiscount + seasonalDiscount
     val taxableAmount = subtotal - discount
     val tax = (taxableAmount * taxRate).setScale(0, RoundingMode.HALF_UP)
-    return OrderTotals(subtotal, discount, tax, taxableAmount + tax)
+    return OrderTotals(subtotal, discount, tax, taxableAmount + tax, productDiscount, seasonalDiscount)
 }
 
-class Pedido(val id: Int, val cliente: Cliente, productos: List<Producto>, val notas: String?) {
+class Pedido @JvmOverloads constructor(
+    val id: Int,
+    val cliente: Cliente,
+    productos: List<Producto>,
+    val notas: String?,
+    val date: LocalDate = LocalDate.now()
+) {
     val productos: List<Producto> = productos.map { it.snapshot() }
     var estado: OrderStatus = OrderStatus.PREPARING
         private set
@@ -126,14 +161,14 @@ class Pedido(val id: Int, val cliente: Cliente, productos: List<Producto>, val n
 
     init {
         require(id > 0) { "El identificador debe ser positivo." }
-        require(this.productos.isNotEmpty()) { "El pedido debe contener pizzas." }
-        require(this.productos.groupingBy { it.nombre.trim().lowercase() }.eachCount()
+        require(this.productos.isNotEmpty()) { "El pedido debe contener productos." }
+        require(this.productos.groupingBy { it.nombre.trim().lowercase() to it.category }.eachCount()
             .values.all { it in ORDER_QUANTITY_RANGE }) {
             "La cantidad por producto debe estar entre ${ORDER_QUANTITY_RANGE.first} y ${ORDER_QUANTITY_RANGE.last}."
         }
     }
 
-    fun calcularTotal(): OrderTotals = calculateTotals(productos)
+    fun calcularTotal(): OrderTotals = calculateTotals(productos, date = date)
 
     fun assignDeliveryPerson(deliveryPerson: Repartidor) {
         check(repartidor == null) { "El pedido ya tiene un repartidor." }

@@ -91,10 +91,12 @@ fun showSummary(order: Pedido) {
     println("\n========== PEDIDO #${order.id} ==========")
     println(order.cliente.describir())
     for ((product, copies) in order.productos.groupBy { it.nombre to it.precio }) {
-        println("Pizza: ${product.first} | Precio unitario: ${money(product.second)} | Cantidad: ${copies.size}")
+        println("Producto: ${product.first} | Precio unitario: ${money(product.second)} | Cantidad: ${copies.size}")
     }
     println("Subtotal: ${money(totals.subtotal)}")
-    println("Descuento: ${money(totals.discount)}")
+    println("Descuento por producto: ${money(totals.productDiscount)}")
+    println("Descuento por cantidad: ${money(totals.discount - totals.productDiscount - totals.seasonalDiscount)}")
+    println("Descuento de temporada: ${money(totals.seasonalDiscount)}")
     println("Impuesto (19 % sobre subtotal con descuento): ${money(totals.tax)}")
     println("Total final: ${money(totals.total)}")
     println("Estado: ${order.estado.label}")

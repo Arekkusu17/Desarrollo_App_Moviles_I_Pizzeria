@@ -1,4 +1,5 @@
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -74,7 +75,7 @@ public class WeekTwoTests {
         });
         test("Cambio de catálogo conserva precio vendido", () -> {
             Producto product = pizza("1000");
-            Pedido order = new Pedido(1, client(), List.of(product), null);
+            Pedido order = new Pedido(1, client(), List.of(product), null, LocalDate.of(2026, 11, 1));
             product.actualizarPrecio(new BigDecimal("2000"));
             equalMoney(order.calcularTotal().getTotal(), "1190");
         });

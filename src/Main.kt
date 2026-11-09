@@ -2,8 +2,9 @@ import java.math.BigDecimal
 
 fun main() {
     val catalog = listOf(
-        Producto("Napolitana", BigDecimal("10000"), mapOf("Masa" to 1, "Salsa" to 1, "Queso" to 2)),
-        Producto("Pepperoni", BigDecimal("12000"), mapOf("Masa" to 1, "Salsa" to 1, "Queso" to 2, "Pepperoni" to 1))
+        PromotionalPizza("Napolitana", BigDecimal("10000"), mapOf("Masa" to 1, "Salsa" to 1, "Queso" to 2)),
+        Producto("Pepperoni", BigDecimal("12000"), mapOf("Masa" to 1, "Salsa" to 1, "Queso" to 2, "Pepperoni" to 1)),
+        PromotionalCombo("Combo familiar", BigDecimal("22000"), mapOf("Masa" to 2, "Salsa" to 2, "Queso" to 4, "Pepperoni" to 1))
     )
     val inventory = Inventory(mapOf("Masa" to 10, "Salsa" to 10, "Queso" to 20, "Pepperoni" to 5))
     val ingredientNames: Set<String> = catalog.flatMap { it.ingredientes.keys }.toSet()
@@ -21,7 +22,7 @@ fun main() {
     try {
         while (true) {
             println("\n1. Nuevo pedido\n2. Avanzar estado de un pedido\n3. Ver inventario y reabastecer")
-            println("4. Reporte del día\n5. Actualizar precio de una pizza\n0. Salir")
+            println("4. Reporte del día\n5. Actualizar precio de un producto\n0. Salir")
             when (readInt("Opción", 0, 5)) {
                 0 -> break
                 1 -> {
@@ -52,7 +53,7 @@ private fun createOrder(
     while (true) {
         for ((index, product) in catalog.withIndex()) println("${index + 1}. ${product.detallarProducto()}")
         println("0. Terminar selección")
-        val choice = readInt("Pizza", 0, catalog.size)
+        val choice = readInt("Producto", 0, catalog.size)
         if (choice == 0) break
         val product = catalog[choice - 1]
         val remaining = ORDER_QUANTITY_RANGE.last - products.count { it === product }
@@ -64,7 +65,7 @@ private fun createOrder(
         repeat(quantity) { products.add(product) }
     }
     if (products.isEmpty()) {
-        println("Pedido cancelado: no se seleccionaron pizzas.")
+        println("Pedido cancelado: no se seleccionaron productos.")
         return null
     }
     print("Notas opcionales (Enter para omitir): ")
@@ -150,7 +151,7 @@ private fun replenishInventory(inventory: Inventory) {
 private fun updateCatalogPrice(catalog: List<Producto>) {
     for ((index, product) in catalog.withIndex()) println("${index + 1}. ${product.detallarProducto()}")
     println("0. Volver")
-    val choice = readInt("Pizza a actualizar", 0, catalog.size)
+    val choice = readInt("Producto a actualizar", 0, catalog.size)
     if (choice == 0) return
     val newPrice = readPrice()
     catalog[choice - 1].actualizarPrecio(newPrice)
