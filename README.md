@@ -1,6 +1,6 @@
 # Pizzería en Kotlin
 
-Actividad sumativa individual de Desarrollo App Móviles I, Semana 3 «Creando soluciones con Kotlin». La aplicación de consola Kotlin/JVM amplía la pizzería de Semana 2 con validaciones, promociones, reflexión y un resumen de demostración.
+Actividad sumativa individual de Desarrollo App Móviles I, Semana 3 «Creando soluciones con Kotlin». La aplicación de consola Kotlin/JVM amplía la pizzería de Semana 2 con validaciones, promociones, reflexión y un resumen de los pedidos de la sesión.
 
 ## Requisitos y ejecución
 
@@ -18,10 +18,9 @@ Actividad sumativa individual de Desarrollo App Móviles I, Semana 3 «Creando s
 | 3. Inventario y reabastecimiento | Consultar las existencias de cada ingrediente, seleccionar uno y agregar unidades. Usar 0 para volver sin modificar. |
 | 4. Reporte del día | Mostrar una línea por pedido y los grupos de completados y pendientes, sin repetir resúmenes ni datos de usuarios. |
 | 5. Actualizar precio | Elegir un producto e ingresar un precio entero positivo. Los pedidos registrados conservan el precio de venta. |
-| 6. Demostración Semana 3 | Combinar dos pedidos de ejemplo, inspeccionar las clases y generar `resumen_pizzeria.txt` en el directorio de ejecución. Una nueva ejecución de esta opción reemplaza el archivo anterior. |
-| 0. Salir | Mostrar el reporte y terminar la sesión. |
+| 0. Salir | Mostrar el reporte y terminar la sesión. Si hay pedidos confirmados, guardar el resumen en `resumen_pizzeria.txt` en el directorio de ejecución. |
 
-El detalle de venta se muestra al confirmar o avanzar el estado de un pedido. La opción 4 presenta el reporte compacto del día. La opción 6 usa datos ficticios para mostrar validaciones, desestructuración de cliente y pedido, promociones, igualdad y reflexión. La demostración es una vista previa y no registra ventas ni consume inventario.
+El detalle de venta se muestra al confirmar o avanzar el estado de un pedido. La opción 4 presenta el reporte compacto del día. El resumen al salir agrupa clientes y productos por su igualdad, muestra las promociones aplicables a los productos vendidos e inspecciona las clases del dominio. Si un cliente tiene dos o más pedidos, muestra una vista previa de la combinación de los dos últimos. La vista previa no consume inventario y cada sesión con pedidos confirmados reemplaza el archivo anterior.
 
 El fin de la entrada cancela la operación que no se haya confirmado y muestra el reporte de los pedidos aceptados hasta ese momento.
 
@@ -46,7 +45,7 @@ El arreglo del día contiene los pedidos aceptados. Los intentos rechazados o ca
 - El subtotal suma los precios de todos los productos a los valores registrados al momento de la venta.
 - Primero se aplica el descuento de `@Promocionable` por producto. Los valores de ejemplo son 5 % en la Napolitana y 8 % en el combo familiar.
 - Si hay más de tres unidades de productos de categoría pizza, se descuenta un 10 % del importe restante. El combo cuenta como producto de su propia categoría.
-- Entre el 2 y el 15 de noviembre de 2026, ambos inclusive, se descuenta otro 10 % sobre el importe después de los descuentos anteriores. El pedido interactivo usa la fecha local y la demostración usa fechas fijas para mostrar ambos casos.
+- Entre el 2 y el 15 de noviembre de 2026, ambos inclusive, se descuenta otro 10 % sobre el importe después de los descuentos anteriores. El pedido interactivo usa la fecha local.
 - Se aplica el impuesto de simulación del 19 % sobre el importe después de descuentos. Cada descuento y el impuesto se redondean por separado al peso más cercano con `HALF_UP`.
 
 Ejemplo dentro de temporada: una Napolitana y un combo familiar suman $32000. El descuento por producto es $2260 y el de temporada es $2974. El impuesto es $5086 y el total $31852. Se consumen 3 masas, 3 porciones de salsa, 6 de queso y 1 de pepperoni.
@@ -74,7 +73,7 @@ El flujo es `En preparación` → `Listo` → `En camino` → `Entregado`. Sin r
 | `src/Inventory.kt` | Inventario con `Map`, cálculo de ingredientes para un lote, verificación con `when` y actualización del stock. |
 | `src/Console.kt` | Validaciones de entrada y reportes de consola. |
 | `src/Promotions.kt` | Anotación `@Promocionable`, rango de temporada e inspección mediante `kotlin-reflect`. |
-| `src/WeekThreeDemo.kt` | Demostración integrada y guardado del resumen en texto. |
+| `src/SessionSummary.kt` | Resumen de los pedidos confirmados y guardado en texto. |
 | `test/WeekTwoTests.java` y `test/WeekThreeTests.java` | Pruebas de reglas de negocio en Java. |
 
 Se conservan las clases y métodos nombrados explícitamente en la actividad (`detallarProducto`, `calcularTotal`, `cambiarEstado`, `entregarPedido`). Las demás funciones usan nombres en inglés según las reglas del proyecto.
@@ -91,9 +90,9 @@ build_dir=$(mktemp -d /tmp/pizzeria-week3.XXXXXX)
 javac --release 21 -encoding UTF-8 -cp "$build_dir/app.jar:$reflect_jar" -d "$build_dir" test/*.java
 java -cp "$build_dir/app.jar:$reflect_jar:$build_dir" WeekTwoTests
 java -cp "$build_dir/app.jar:$reflect_jar:$build_dir" WeekThreeTests
-(cd "$build_dir" && printf '6\n0\n' | java -cp "$build_dir/app.jar:$reflect_jar" MainKt)
+(cd "$build_dir" && java -cp "$build_dir/app.jar:$reflect_jar" MainKt)
 ```
 
-Las dos suites también se pueden ejecutar desde sus métodos `main` en IntelliJ. No requieren un framework de pruebas. Los comandos de terminal dejan el compilado y el resumen de la demostración en el directorio temporal que crea `mktemp`.
+Las dos suites también se pueden ejecutar desde sus métodos `main` en IntelliJ. No requieren un framework de pruebas. Para probar el resumen, ingresa dos pedidos del mismo cliente y selecciona 0. El último comando guarda el resumen de esa sesión en el directorio temporal que crea `mktemp`.
 
 Las pruebas comprueban, entre otros casos, los límites de fecha y cantidad, la acumulación de descuentos, los duplicados, los precios históricos al combinar pedidos y la inspección de clases. También cubren el inventario, el redondeo, los estados y la asignación de repartidores de Semana 2.
