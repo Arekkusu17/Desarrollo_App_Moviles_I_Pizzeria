@@ -5,7 +5,7 @@ fun main() {
         PromotionalPizza("Napolitana", BigDecimal("10000"), mapOf("Masa" to 1, "Salsa" to 1, "Queso" to 2)),
         Producto("Pepperoni", BigDecimal("12000"), mapOf("Masa" to 1, "Salsa" to 1, "Queso" to 2, "Pepperoni" to 1)),
         PromotionalCombo("Combo familiar", BigDecimal("22000"), mapOf("Masa" to 2, "Salsa" to 2, "Queso" to 4, "Pepperoni" to 1))
-    )
+    ).distinct()
     val inventory = Inventory(mapOf("Masa" to 10, "Salsa" to 10, "Queso" to 20, "Pepperoni" to 5))
     val ingredientNames: Set<String> = catalog.flatMap { it.ingredientes.keys }.toSet()
     require(inventory.quantities().keys.containsAll(ingredientNames)) {
@@ -17,6 +17,7 @@ fun main() {
         Repartidor("Repartidor C", "Contacto de prueba C", 9)
     )
     var dailyOrders: Array<Pedido> = emptyArray()
+    val clients = mutableSetOf<Cliente>()
     println("PIZZERÍA — SEMANA 2")
     println("Inventario en unidades de ingrediente por receta. Impuesto de simulación: 19 %.")
     try {
@@ -27,7 +28,12 @@ fun main() {
                 0 -> break
                 1 -> {
                     val order = createOrder(dailyOrders.size + 1, catalog, inventory, deliveryPeople)
-                    order?.let { dailyOrders += it }
+                    if (order != null) {
+                        dailyOrders += order
+                        if (!clients.add(order.cliente)) {
+                            println("Cliente ya registrado. Se usan los datos ingresados para este pedido.")
+                        }
+                    }
                 }
                 2 -> advanceOrder(dailyOrders, deliveryPeople)
                 3 -> replenishInventory(inventory)
@@ -39,6 +45,7 @@ fun main() {
         println("\nEntrada finalizada. La operación incompleta no fue confirmada.")
     }
     showDailyReport(dailyOrders)
+    println("Clientes registrados: ${clients.size}")
     println("Sesión finalizada. Los datos de esta simulación se mantienen solo en memoria.")
 }
 
@@ -56,7 +63,7 @@ private fun createOrder(
         val choice = readInt("Producto", 0, catalog.size)
         if (choice == 0) break
         val product = catalog[choice - 1]
-        val remaining = ORDER_QUANTITY_RANGE.last - products.count { it === product }
+        val remaining = ORDER_QUANTITY_RANGE.last - products.count { it == product }
         if (remaining == 0) {
             println("Límite de ${ORDER_QUANTITY_RANGE.last} unidades de ${product.nombre} alcanzado.")
             continue
