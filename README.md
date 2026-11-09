@@ -1,46 +1,91 @@
 # Pizzería en Kotlin
 
-Actividad formativa individual de Desarrollo App Móviles I, Semana 1: «Mi primera app en Kotlin». Programa de consola Kotlin/JVM que registra un cliente y un pedido, calcula descuentos y controla el stock.
+Actividad individual de Desarrollo App Móviles I, Semana 2: «Aplicando utilidades de Kotlin». Aplicación de consola Kotlin/JVM para gestionar pedidos, recetas, inventario y repartidores durante una sesión.
 
 ## Requisitos y ejecución
 
-- IntelliJ IDEA con soporte Kotlin y JDK 21.
-- Abrir la carpeta `Pizzeria` como proyecto en IntelliJ.
-- Seleccionar el JDK 21 del proyecto y esperar la resolución de la biblioteca Kotlin.
-- Abrir `src/Main.kt` y ejecutar `main` con el botón de ejecución.
-- Ingresar los datos solicitados en la consola. Los precios se ingresan en pesos chilenos enteros, sin separadores.
+1. Abrir la carpeta `Pizzeria` en IntelliJ IDEA con soporte Kotlin y JDK 21.
+2. Esperar que el IDE resuelva la biblioteca Kotlin.
+3. Abrir `src/Main.kt` y ejecutar `main`.
+4. Utilizar el menú en la consola; ingresar `0` en el menú principal para terminar.
 
-Ejemplo: precio `1000`, stock `10` y cantidad `4` producen subtotal de $4000, descuento de $400, total de $3600 y stock restante de 6 porciones.
+## Uso
 
-## Reglas y decisiones de Semana 1
+| Opción | Comportamiento |
+| --- | --- |
+| 1. Nuevo pedido | Registrar cliente, elegir pizzas y cantidades, terminar la selección con 0 y agregar notas opcionales. Se valida el inventario completo antes de confirmar. |
+| 2. Avanzar estado | Elegir el ID de un pedido para pasar al siguiente estado. Al entregar, el repartidor vuelve a estar disponible. |
+| 3. Inventario y reabastecimiento | Consultar las existencias de cada ingrediente, seleccionar uno y agregar unidades. Usar 0 para volver sin modificar. |
+| 4. Reporte del día | Mostrar una línea por pedido y los grupos de completados y pendientes, sin repetir resúmenes ni datos de usuarios. |
+| 5. Actualizar precio | Elegir una pizza e ingresar un precio entero positivo. Los pedidos registrados conservan el precio de venta. |
+| 0. Salir | Mostrar el reporte y terminar la sesión. |
 
-- Se registra un pedido por ejecución, con un identificador UUID. Los datos se mantienen únicamente durante la ejecución.
-- Se conservan los nombres de variables indicados por la actividad para cliente, pizza y pedido. Las funciones auxiliares y otras variables usan inglés.
-- Se aplica un 10 % de descuento únicamente al pedir más de tres pizzas.
-- Los importes utilizan `BigDecimal`. El descuento se redondea al peso más cercano con `HALF_UP`; por ejemplo, $500,50 se redondea a $501. Esta semana no se agregan impuestos.
-- El nombre, dirección y nombre de pizza son obligatorios. Se vuelve a solicitar un campo vacío. El precio y la cantidad deben ser positivos; el stock puede ser cero. Las entradas numéricas incorrectas se solicitan nuevamente.
-- El teléfono se conserva como texto, con validación básica de 9 a 15 dígitos y un signo `+` opcional. Si está vacío, es nulo o no cumple el formato, se usa «Sin teléfono válido». No se comprueba su existencia ni un formato nacional específico.
-- La pauta no define recetas: se asume una porción de ingredientes por pizza. El inventario se reduce solo si alcanza para todo el pedido.
-- Si falta stock, se informa la cantidad faltante, se conserva el inventario y el pedido queda rechazado, sin cobro, descuento aplicado ni repartidor.
-- Las instrucciones saltan del paso 4 al 6 y piden un repartidor en el resumen sin definir su asignación. Se usa «Repartidor de turno» para pedidos confirmados; la coordinación avanzada queda para semanas posteriores.
-- Se utiliza `readlnOrNull()` para leer la consola; es el equivalente actual de `readLine()`, usado en la guía y marcado como obsoleto por el compilador instalado.
-- El fin de la entrada antes de completar el registro cancela el proceso sin confirmar un pedido.
+El resumen completo se muestra al confirmar o avanzar el estado de un pedido. La opción 4 presenta únicamente el reporte compacto del día.
 
-## Verificación funcional
+El fin de la entrada cancela la operación que no se haya confirmado y muestra el reporte de los pedidos aceptados hasta ese momento.
 
-La aplicación usa el sistema de compilación IntelliJ; no requiere Gradle ni Maven. Para verificarla desde una terminal en macOS con IntelliJ instalado en la ubicación estándar:
+## Recetas e inventario
+
+Las recetas y cantidades son supuestos didácticos: las instrucciones no establecen gramos, recetas ni unidades. Una unidad corresponde a una base de masa o a una porción del ingrediente; dos unidades de queso representan dos porciones.
+
+| Pizza | Precio antes de impuestos | Masa | Salsa | Queso | Pepperoni |
+| --- | --- | --- | --- | --- | --- |
+| Napolitana | $10000 | 1 | 1 | 2 | 0 |
+| Pepperoni | $12000 | 1 | 1 | 2 | 1 |
+| Stock inicial | — | 10 | 10 | 20 | 5 |
+
+Para un pedido se suman las necesidades de todas las pizzas y se comparan con el inventario. Si falta cualquier ingrediente, se informa su nombre y la cantidad faltante, se explican los pasos de reabastecimiento y se rechaza el pedido completo sin cobro ni reducción parcial del inventario. El usuario puede reabastecer y registrar nuevamente el pedido.
+
+El arreglo del día contiene los pedidos aceptados; los intentos rechazados o cancelados se informan en consola y no reciben un ID. Los IDs son consecutivos dentro de la sesión. Se permiten varias pizzas del catálogo por pedido, con un máximo didáctico de 1000 unidades para limitar el tamaño de la selección.
+
+## Cálculo de importes
+
+- Los precios se expresan en pesos enteros mediante `BigDecimal`.
+- El subtotal suma los precios de todas las pizzas.
+- Se descuenta un 10 % al pedir más de tres pizzas, contando todos los tipos del pedido.
+- La pauta no fija una tasa de impuestos ni su base. Se adopta un impuesto de simulación del 19 % sobre el subtotal después del descuento, con precios de catálogo antes de impuestos. Es una decisión del ejercicio, no un sistema de facturación.
+- Descuento e impuesto se redondean por separado al peso más cercano con `HALF_UP`.
+- El total final es subtotal menos descuento más impuesto.
+
+Ejemplo: cuatro Napolitanas dan subtotal de $40000, descuento de $4000, impuesto de $6840 y total de $42840. Consumen 4 masas, 4 porciones de salsa y 8 de queso; el stock restante es 6, 6 y 12, respectivamente.
+
+La tasa se define en `DEFAULT_TAX_RATE` en `src/Models.kt`. Si se cambia, deben actualizarse también las etiquetas de consola, ejemplos y pruebas correspondientes.
+
+## Clientes, estados y repartidores
+
+El teléfono admite entre 9 y 15 dígitos, con `+` inicial opcional. El correo requiere usuario, `@` y dominio con punto, sin espacios. Son validaciones básicas de formato; no comprueban la existencia de los contactos. Los valores inválidos o vacíos se reemplazan por `(000) 000-0000` y `correo@invalido.com`.
+
+Las notas son opcionales y se muestran como «Sin notas» cuando están ausentes. Solo con un correo de formato válido se imprime una notificación claramente identificada como simulada; no se envían mensajes reales.
+
+La cercanía se simula en una ruta lineal entre los km 0 y 100. El cliente ingresa su posición; los tres repartidores comienzan en los km 1, 5 y 9. Se ordenan por distancia absoluta al cliente y se usa `find` para seleccionar al primero disponible. Los empates respetan el orden de la lista. No se utiliza GPS ni se calcula una ruta real.
+
+El repartidor queda reservado al confirmar el pedido y no puede recibir otro hasta terminar la entrega. Si todos están ocupados, el pedido se acepta en preparación, pendiente de asignación. Se vuelve a buscar un repartidor al intentar despacharlo.
+
+El flujo es `En preparación` → `Listo` → `En camino` → `Entregado`. Sin repartidor, el pedido permanece `Listo`. La entrega libera al repartidor y actualiza su posición al km del cliente. `Entregado` se agrega como estado terminal para distinguir completados de pendientes; estos últimos son todos los demás estados.
+
+## Organización y correspondencia con la actividad
+
+| Archivo | Responsabilidad y conceptos |
+| --- | --- |
+| `src/Main.kt` | Menú, pedidos del día en `Array<Pedido>`, catálogo y repartidores con `listOf`, ingredientes únicos con `Set`, coordinación de altas y estados. |
+| `src/Models.kt` | Clases `Producto` y `Pedido`; herencia de `Usuario` en `Cliente` y `Repartidor`; `override`, encapsulación, totales, asignación y entrega. |
+| `src/Inventory.kt` | Inventario con `Map`, cálculo de ingredientes para un lote, verificación con `when` y actualización del stock. |
+| `src/Console.kt` | Entrada con `try-catch`, validación de strings, operadores `?.` y `?:`, reportes con `for` y `filter` y plantillas de strings. |
+| `test/WeekTwoTests.java` | 19 pruebas de reglas de negocio en Java, sin dependencias de pruebas externas. |
+
+Se conservan las clases y métodos nombrados explícitamente en la actividad (`detallarProducto`, `calcularTotal`, `cambiarEstado`, `entregarPedido`). Las demás funciones usan nombres en inglés según las reglas del proyecto.
+
+## Verificación
+
+Desde la raíz del proyecto, en macOS con IntelliJ en su ubicación estándar y JDK 21 (`java` y `javac`) en el PATH:
 
 ```bash
-"/Applications/IntelliJ IDEA.app/Contents/plugins/Kotlin/kotlinc/bin/kotlinc" src/Main.kt -include-runtime -d /tmp/pizzeria-week1.jar
-python3 tests/verify_week1.py /tmp/pizzeria-week1.jar
+"/Applications/IntelliJ IDEA.app/Contents/plugins/Kotlin/kotlinc/bin/kotlinc" src/*.kt -include-runtime -d /tmp/pizzeria-week2.jar
+mkdir -p /tmp/pizzeria-week2-tests
+javac --release 21 -encoding UTF-8 -cp /tmp/pizzeria-week2.jar -d /tmp/pizzeria-week2-tests test/WeekTwoTests.java
+java -cp /tmp/pizzeria-week2.jar:/tmp/pizzeria-week2-tests WeekTwoTests
 ```
 
-Las pruebas requieren Python 3, usan solamente su biblioteca estándar y ejecutan el JAR mediante `java`. Si IntelliJ está en otra ubicación, ajustar la ruta al compilador. También se puede compilar con `kotlinc` si está disponible en el PATH.
+Las pruebas están escritas únicamente en Java y también pueden ejecutarse con `main` desde `test/WeekTwoTests.java` en IntelliJ. Utilizan la interoperabilidad entre Java y Kotlin y no necesitan un framework externo. Los archivos compilados se generan en `/tmp`, fuera del repositorio.
 
-Se verifican nueve casos: tres pizzas sin descuento, cuatro con descuento, stock exacto, stock insuficiente, stock cero, teléfono inválido o vacío, corrección de campos y números inválidos, redondeo del descuento y fin de entrada. Las pruebas no utilizan datos personales reales ni generan archivos en el proyecto.
-
-## Entrega y evolución
-
-Flujo de ramas: `feature/*` → `develop` → `main`. Los commits no incluyen coautoría.
-
-La versión entregable de Semana 1 se identifica con la etiqueta `semana-1`. El ZIP debe contener el proyecto y sus archivos necesarios para abrirlo, sin `.git`, compilados ni archivos temporales. Las siguientes semanas ampliarán el sistema según sus pautas, conservando esta versión inicial.
+Se comprueban descuentos, impuestos y redondeo con valores esperados, recetas mixtas, consumos exactos, rechazo sin modificaciones parciales, reabastecimiento, negativos y desbordamientos, contactos inválidos, precios de venta, estados, disponibilidad de repartidores, herencia y polimorfismo. No se afirma envío real de notificaciones, persistencia ni geolocalización.
